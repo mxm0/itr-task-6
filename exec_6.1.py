@@ -64,9 +64,10 @@ def main(args):
                     c_space[theta_2][theta_1] = 0
                     #print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
 
-    # Need to flip the array vertically because numpy array
+    # Need to flip the array because numpy access them row first
     # are accessed row first.
     c_space = np.flip(c_space, 0)
+    c_space = np.flip(c_space, 1)
 
     # Plot configuration space
     # TODO: Better plotting with right axes
