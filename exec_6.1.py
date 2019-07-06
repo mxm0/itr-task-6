@@ -41,11 +41,14 @@ def tf_base_to_world(position):
 def calc_cspace(theta_1_fullrange, theta_2_fullrange, precision, c_obstacles, queue, id, numproc):
     t1_start = math.floor(theta_1_fullrange / numproc) * id
     t2_start = math.floor(theta_1_fullrange / numproc) * id
-    t1_range = math.floor(theta_1_fullrange / numproc) - 1
-    t2_range = math.floor(theta_1_fullrange / numproc) - 1
+    t1_range = math.floor(theta_1_fullrange / numproc)
+    t2_range = math.floor(theta_1_fullrange / numproc)
     if id == numproc - 1:
-        t1_range = t1_range + 1
-        t2_range = t2_range + 1
+        t1_range = t1_range
+        t2_range = t2_range
+
+    t1_start = 0
+    t1_range = theta_1_fullrange
 
     print("Process %d: t1_start: %3d\tt1_range: %3d\tt2_start: %3d\tt2_range: %3d" % (id, t1_start, t1_range, t2_start, t2_range))
 
@@ -94,12 +97,9 @@ def main(args):
     p2.start()
     p3.start()
     np.add(c_space, queue.get(), c_space)
-    #np.add(c_space, queue.get(), c_space)
-    #np.add(c_space, queue.get(), c_space)
-    #np.add(c_space, queue.get(), c_space)
-    queue.get()
-    queue.get()
-    queue.get()
+    np.add(c_space, queue.get(), c_space)
+    np.add(c_space, queue.get(), c_space)
+    np.add(c_space, queue.get(), c_space)
     p0.join()
     p1.join()
     p2.join()
