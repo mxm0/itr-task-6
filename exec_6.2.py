@@ -1,13 +1,11 @@
 #!/usr/bin/python3
-import sys
-import argparse
+import sys, argparse
 import numpy as np
-import multiprocess as mp
+import multiprocessing as mp
 import math
 import shapely.geometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
-import matplotlib.cm as cm
 
 BASE_POS = np.array([500, 500])
 L_1, L_2 = 200, 200
@@ -24,7 +22,7 @@ _S = (900, 500)
 R_SG = 10
 
 def compute_fk(theta_1, theta_2, a_1, a_2):
-    """ Compute forward kinematics for 2D planar manipulator. 
+    """ Compute forward kinematics for 2D planar manipulator.
         Input angles in degrees.
     """
     theta_1_rad = math.radians(theta_1)
@@ -71,11 +69,18 @@ def main(args):
 
             c_space[theta_2][theta_1] = 255
 
+            if G_1.intersects(tcp) or G_2.intersects(tcp):
+                c_space[theta_2][theta_1] = 10
+                # print("Found G")
+            elif S.intersects(tcp):
+                c_space[theta_2][theta_1] = 20
+                # print("Found S")
+
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if c_obstacle.intersects(tcp):
                     c_space[theta_2][theta_1] = 0
-                    #print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
+                    # print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
@@ -84,8 +89,10 @@ def main(args):
 
     # Plot configuration space
     # TODO: Better plotting with right axes
-    colormap = clr.ListedColormap(['gray', 'white'])
-    plt.imshow(c_space, cmap=colormap)
+    bounds = [0, 9, 19, 254, 255]
+    colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
+    norm = clr.BoundaryNorm(bounds, colormap.N)
+    plt.imshow(c_space, cmap=colormap, norm=norm)
     plt.show()
 
     # TODO: Plot work and configuration space with
