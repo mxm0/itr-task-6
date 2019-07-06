@@ -51,7 +51,6 @@ def main(args):
     # substract radius of TCP so that TCP is fully in area
     G_1 = shapely.geometry.Point(_G_1).buffer(R_SG - 2)
     G_2 = shapely.geometry.Point(_G_2).buffer(R_SG - 2)
-    G_3 = shapely.geometry.Point((550, 550)).buffer(10)
     S = shapely.geometry.Point(_S).buffer(R_SG - 2)
 
     link1_line = shapely.geometry.LineString([(500, 500 + 20), (500, 500 + L_1 - 5)])
@@ -59,9 +58,6 @@ def main(args):
 
     link1 = link1_line.buffer(5)
     link2 = link2_line.buffer(5)
-
-    print(link2.area)
-    print(link1.area)
 
     theta_1_range = int(360 / precision) + 1 # include upper bound
     theta_2_range = int(360 / precision) + 1
@@ -88,16 +84,6 @@ def main(args):
 
             c_space[theta_2][theta_1] = 255
 
-            if G_1.intersects(tcp) or G_2.intersects(tcp):
-                c_space[theta_2][theta_1] = 10
-                # print("Found G")
-            elif S.intersects(tcp):
-                c_space[theta_2][theta_1] = 20
-                # print("Found S")
-
-            #if link1.intersects(G_1) or link1.intersects(G_2) or link2.intersects(G_1) or link2.intersects(G_2) or link1.intersects(G_3) or link2.intersects(G_3):
-             #   c_space[theta_2][theta_1] = 30
-
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if link1.intersects(c_obstacle) or link2.intersects(c_obstacle):
@@ -105,6 +91,13 @@ def main(args):
                 if c_obstacle.intersects(tcp):
                     c_space[theta_2][theta_1] = 0
                     # print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
+
+            if G_1.intersects(tcp) or G_2.intersects(tcp):
+                c_space[theta_2][theta_1] = 10
+                # print("Found G")
+            elif S.intersects(tcp):
+                c_space[theta_2][theta_1] = 20
+                # print("Found S")
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
