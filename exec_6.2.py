@@ -1,11 +1,13 @@
 #!/usr/bin/python3
-import sys, argparse
+import sys
+import argparse
 import numpy as np
-import multiprocessing as mp
+import multiprocess as mp
 import math
 import shapely.geometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import matplotlib.cm as cm
 
 BASE_POS = np.array([500, 500])
 L_1, L_2 = 200, 200
@@ -16,6 +18,10 @@ R_1 = 50
 _O_2 = (250, 200)
 R_2 = 200
 
+_G_1 = (580, 150)
+_G_2 = (230, 470)
+_S = (900, 500)
+R_SG = 10
 
 def compute_fk(theta_1, theta_2, a_1, a_2):
     """ Compute forward kinematics for 2D planar manipulator. 
@@ -42,6 +48,12 @@ def main(args):
     O_1 = shapely.geometry.Point(_O_1).buffer(R_1 + 2)
     O_2 = shapely.geometry.Point(_O_2).buffer(R_2 + 2)
     c_obstacles = [O_1, O_2]
+
+    # Build the start point and two goal points
+    # substract radius of TCP so that TCP is fully in area
+    G_1 = shapely.geometry.Point(_G_1).buffer(R_SG - 2)
+    G_2 = shapely.geometry.Point(_G_2).buffer(R_SG - 2)
+    S = shapely.geometry.Point(_S).buffer(R_SG - 2)
 
     theta_1_range = int(360 / precision) + 1 # include upper bound
     theta_2_range = int(360 / precision) + 1
@@ -72,10 +84,8 @@ def main(args):
 
     # Plot configuration space
     # TODO: Better plotting with right axes
-    bounds = [0, 9, 19, 254, 255]
-    colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
-    norm = clr.BoundaryNorm(bounds, colormap.N)
-    plt.imshow(c_space, cmap=colormap, norm=norm)
+    colormap = clr.ListedColormap(['gray', 'white'])
+    plt.imshow(c_space, cmap=colormap)
     plt.show()
 
     # TODO: Plot work and configuration space with
