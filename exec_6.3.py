@@ -160,7 +160,7 @@ def main(args):
     colormap = clr.ListedColormap(['gray', 'green', 'purple', 'orange', 'red', 'yellow', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
 
-    fig = plt.figure()
+    fig = plt.figure(figsize=(14, 14))
     ax = fig.add_subplot(1, 1, 1)
     c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0
     plt.imshow(c_space_image, cmap=colormap, norm=norm)
@@ -170,6 +170,7 @@ def main(args):
     plt.yticks(np.arange(0, theta_1_range, theta_1_range//36)) # we want exactly 36 ticks for the y axis
     ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
     ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
+    plt.title("Task 6.3 Configuration Space")
     plt.show()
 
 if __name__ == "__main__":
