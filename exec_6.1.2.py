@@ -85,16 +85,6 @@ def main(args):
             world_tcp = tf_base_to_world(base_tcp)
             tcp = shapely.geometry.Point(world_tcp)
 
-            if G_1.contains(tcp):
-                c_space[theta_1][theta_2] = 10
-                path_goal_g1.append((theta_1, theta_2))
-            elif G_2.contains(tcp):
-                c_space[theta_1][theta_2] = 200
-                path_goal_g2.append((theta_1, theta_2))
-            elif S.contains(tcp):
-                c_space[theta_1][theta_2] = 150 
-                path_start.append((theta_1, theta_2))
-
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if c_obstacle.contains(tcp):
@@ -112,6 +102,17 @@ def main(args):
                     node_2 = ((theta_1 + 1) % theta_1_range, theta_2)
                     road_map.add_edge(node_1, node_2)
 
+            if G_1.contains(tcp):
+                c_space[theta_1][theta_2] = 10
+                path_goal_g1.append((theta_1, theta_2))
+            elif G_2.contains(tcp):
+                c_space[theta_1][theta_2] = 200
+                path_goal_g2.append((theta_1, theta_2))
+            elif S.contains(tcp):
+                c_space[theta_1][theta_2] = 150 
+                path_start.append((theta_1, theta_2))
+
+
     print("Configuration space built!")
 
     path_goals = {_G_1 : path_goal_g1, _G_2 : path_goal_g2}
@@ -128,7 +129,7 @@ def main(args):
                     c_space[node[0]][node[1]] = 50
 
         else:
-            print("Path goal {} is unreachable from path start {}".format(path_goal[0], _S))
+            print("Could not find path from {} to {}".format(path_goal[0], _S))
 
     # Plot configuration space
     bounds = [0, 9, 19, 51, 101, 151, 254, 255]
