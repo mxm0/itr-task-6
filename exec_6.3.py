@@ -50,8 +50,8 @@ def find_path(road_map, paths_start, paths_goal):
                 s_to_g = nk.shortest_path(road_map, path_start, path_goal)
                 return True, s_to_g
             except nk.NetworkXNoPath:
+                print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
                 pass
-                #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
     return False, None 
 
 def main(args):
@@ -117,12 +117,15 @@ def main(args):
 
                     node_2 = (theta_1, (theta_2 + 1) % theta_2_range)
                     road_map.add_edge(node_1, node_2)
+                    road_map.add_edge(node_2, node_1)
 
                     node_2 = ((theta_1 + 1) % theta_1_range, (theta_2 + 1) % theta_2_range)
                     road_map.add_edge(node_1, node_2)
+                    road_map.add_edge(node_2, node_1)
 
                     node_2 = ((theta_1 + 1) % theta_1_range, theta_2)
                     road_map.add_edge(node_1, node_2)
+                    road_map.add_edge(node_2, node_1)
 
             if G_1.contains(tcp):
                 if c_space[theta_1][theta_2] != 0:
@@ -140,7 +143,8 @@ def main(args):
     print("Configuration space built!")
 
     path_goals = {_G_1 : path_goal_g1, _G_2 : path_goal_g2}
-    print(path_goals)
+
+    path_goals = {_G_1: path_goal_g1, _G_2: path_goal_g2}
 
     for path_goal in path_goals.items():
         pathIsFound, found_path = find_path(road_map, path_start, path_goal[1])
@@ -177,7 +181,7 @@ if __name__ == "__main__":
         description = "Compute and plot configuration space for 2D manipulator for exec 6.1.")
     parser.add_argument(
 		  "precision",
-                  type=int,
+                  type=float,
                   nargs="?",
                   default=1,
 		  help = "pass precision for configuration space",
