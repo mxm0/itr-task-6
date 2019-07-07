@@ -54,6 +54,15 @@ def find_path(road_map, paths_start, paths_goal):
                 #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
     return False, None 
 
+def draw_circle_obstacle(workspace, obstacle_origin, radius, color_value):
+    inflated_radius = radius + 1
+    for i in range(obstacle_origin[0]-inflated_radius, obstacle_origin[0] + inflated_radius):
+        for j in range(obstacle_origin[1]-inflated_radius, obstacle_origin[1] + inflated_radius):
+            if (obstacle_origin[0]-i)**2 + (obstacle_origin[1]-j)**2 <= inflated_radius**2:
+                workspace[i, j] = color_value
+
+    return workspace
+
 
 def main(args):
     precision = args.precision
@@ -146,7 +155,30 @@ def main(args):
     plt.yticks(np.arange(0, theta_1_range, theta_1_range//36)) # we want exactly 36 ticks for the y axis
     ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
     ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
+    plt.title("Configuration Space")
     plt.show()
+
+
+
+# Draw workspace:
+
+    workspace = np.full((1000, 1000), 255)
+    workspace = draw_circle_obstacle(workspace, (270, 620), 50, 0)
+    workspace = draw_circle_obstacle(workspace, (250, 200), 200, 0)
+
+    workspace = draw_circle_obstacle(workspace, (900, 500), 10, 150)
+    workspace = draw_circle_obstacle(workspace, (580, 150), 10, 10)
+    workspace = draw_circle_obstacle(workspace, (230, 470), 10, 200)
+
+    fig2 = plt.figure()
+    workspace_image = workspace # dummy variable in case we want to manipulate the image and live the original matrix intact
+    plt.imshow(workspace_image, cmap=colormap, norm=norm)
+    plt.ylim(0, 1000)
+    plt.title("Workspace")
+    plt.show()
+
+# End drawing workspace
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -155,7 +187,7 @@ if __name__ == "__main__":
 		  "precision",
                   type=float,
                   nargs="?",
-                  default=1,
+                  default=10,
 		  help = "pass precision for configuration space",
 		  metavar = "P")
     args = parser.parse_args() 
