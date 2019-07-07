@@ -72,7 +72,9 @@ def main(args):
     norm = clr.BoundaryNorm(bounds, colormap.N)
     plt.xlabel("Theta 2")
     plt.ylabel("Theta 1")
-    plt.imshow(c_space, cmap=colormap, norm=norm)
+    c_space_image = np.flipud(c_space)
+    plt.imshow(c_space_image, cmap=colormap, norm=norm)
+    plt.ylim(0, 360)
     plt.show()
 
 if __name__ == "__main__":
