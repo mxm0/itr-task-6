@@ -67,14 +67,21 @@ def main(args):
     c_space[int(theta_1_range / 2)][int(theta_2_range / 2)] = 100
 
     # Plot configuration space
+
     bounds = [0, 9, 19, 254, 255]
     colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0
+    plt.imshow(c_space_image, cmap=colormap, norm=norm)
     plt.xlabel("Theta 2")
     plt.ylabel("Theta 1")
-    c_space_image = np.flipud(c_space)
-    plt.imshow(c_space_image, cmap=colormap, norm=norm)
-    plt.ylim(0, 360)
+    plt.xticks(np.arange(0, theta_2_range, theta_2_range//36)) # we want exactly 36 ticks for the x axis
+    plt.yticks(np.arange(0, theta_1_range, theta_1_range//36)) # we want exactly 36 ticks for the y axis
+    ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
+    ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
     plt.show()
 
 if __name__ == "__main__":
