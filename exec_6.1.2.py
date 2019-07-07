@@ -39,6 +39,21 @@ def tf_base_to_world(position):
     """ Transform base link coordinates to world coordinates. """
     return position + BASE_POS
 
+def find_path(road_map, paths_start, paths_goal):
+    """ Search for a path from the start area to the goal area
+        Since we have area we take lists of possible configurations.
+    """
+    # Find shortest path from Start to goal positions in c-space
+    for path_start in paths_start:
+        for path_goal in paths_goal:
+            try:
+                s_to_g = nk.shortest_path(road_map, path_start, path_goal)
+                return True, s_to_g
+            except nk.NetworkXNoPath:
+                pass
+                #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
+    return False, None 
+
 
 def main(args):
     precision = args.precision
@@ -58,94 +73,69 @@ def main(args):
     theta_2_range = int(360 / precision) + 1
 
     # Build configuration space
-    # FIXME: Slow as fuck, it needs to be run on multiple processors
     c_space = np.full((theta_1_range, theta_2_range), 255)
     road_map = nk.DiGraph()
-    path_start = (())
-    path_goal_g1 = (())
-    path_goal_g2 = (())
+    path_start = []
+    path_goal_g1 = []
+    path_goal_g2 = []
     print("Computing configuration space...")
-    for theta_2 in range(theta_2_range):
-        for theta_1 in range(theta_1_range):
+    for theta_1 in range(theta_1_range):
+        for theta_2 in range(theta_2_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
             world_tcp = tf_base_to_world(base_tcp)
             tcp = shapely.geometry.Point(world_tcp)
 
-            if G_1.intersects(tcp):
-                c_space[theta_2][theta_1] = 10
-                path_goal_g1 = (theta_2, theta_1)
-                # print("Found G")
-            elif G_2.intersects(tcp):
-                c_space[theta_2][theta_1] = 10
-                path_goal_g2 = (theta_2, theta_1)
-            elif S.intersects(tcp):
-                c_space[theta_2][theta_1] = 20
-                # print("Found S")
-
-            # Store path start configuration
-            if np.array_equal(world_tcp, _S):
-                path_start = (theta_2, theta_1)
+            if G_1.contains(tcp):
+                c_space[theta_1][theta_2] = 10
+                path_goal_g1.append((theta_1, theta_2))
+            elif G_2.contains(tcp):
+                c_space[theta_1][theta_2] = 200
+                path_goal_g2.append((theta_1, theta_2))
+            elif S.contains(tcp):
+                c_space[theta_1][theta_2] = 150 
+                path_start.append((theta_1, theta_2))
 
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if c_obstacle.contains(tcp):
-                    c_space[theta_2][theta_1] = 0
-                    road_map.remove_node((theta_2, theta_1))
+                    c_space[theta_1][theta_2] = 0
+                    road_map.remove_node((theta_1, theta_2))
                 else:
-                    node_1 = (theta_2, theta_1)
+                    node_1 = (theta_1, theta_2)
 
-                    node_2 = (theta_2, (theta_1 + 1) % theta_1_range)
+                    node_2 = (theta_1, (theta_2 + 1) % theta_2_range)
                     road_map.add_edge(node_1, node_2)
 
-                    node_2 = ((theta_2 + 1) % theta_2_range, (theta_1 + 1) % theta_1_range)
+                    node_2 = ((theta_1 + 1) % theta_1_range, (theta_2 + 1) % theta_2_range)
                     road_map.add_edge(node_1, node_2)
 
-                    node_2 = ((theta_2 + 1) % theta_2_range, theta_1)
+                    node_2 = ((theta_1 + 1) % theta_1_range, theta_2)
                     road_map.add_edge(node_1, node_2)
-                    # print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
 
     print("Configuration space built!")
 
-    # Find shortest path from Start to goal positions in c-space
-    print("Searching for path from: {} to {}".format(path_start, path_goal_g1))
-    try:
-        s_to_g1 = nk.shortest_path(road_map, path_start, path_goal_g1)
-        # Draw path
-        for node in s_to_g1:
-            c_space[node[0]][node[1]] = 50
-    except nk.NetworkXNoPath:
-        print("Path goal: {} is unreachable from path start: {}".format(path_start, path_goal_g1))
+    path_goals = {_G_1 : path_goal_g1, _G_2 : path_goal_g2}
+    
+    for path_goal in path_goals.items():
+        pathIsFound, found_path = find_path(road_map, path_start, path_goal[1])
+        if pathIsFound:
+            print("Path to {} found!".format(path_goal[0]))
+            # Draw path
+            for node in found_path:
+                if path_goal[0] == _G_1:
+                    c_space[node[0]][node[1]] = 100
+                else:
+                    c_space[node[0]][node[1]] = 50
 
-
-    print("Searching for path from: {} to {}".format(path_start, path_goal_g2))
-    try:
-        s_to_g2 = nk.shortest_path(road_map, path_start, path_goal_g2)
-        # Draw path
-        for node in s_to_g2:
-            c_space[node[0]][node[1]] = 100
-    except nk.NetworkXNoPath:
-        print("Path goal: {} is unreachable from path start: {}".format(path_start, path_goal_g2))
-
-
-
-
-    # Need to flip the array because numpy access them row first
-    # are accessed row first.
-    c_space = np.flip(c_space, 0)
-    c_space = np.flip(c_space, 1)
+        else:
+            print("Path goal {} is unreachable from path start {}".format(path_goal[0], _S))
 
     # Plot configuration space
-    # TODO: Better plotting with right axes
-    bounds = [0, 9, 19, 51, 101, 254, 255]
-    colormap = clr.ListedColormap(['gray', 'green', 'yellow', 'orange', 'red', 'white'])
+    bounds = [0, 9, 19, 51, 101, 151, 254, 255]
+    colormap = clr.ListedColormap(['gray', 'green', 'purple', 'orange', 'red', 'yellow', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
     plt.imshow(c_space, cmap=colormap, norm=norm)
     plt.show()
-
-    # TODO: Plot work and configuration space with
-    #       start areas.
-
-    # TODO: Find path and plot it in the configuration space
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
