@@ -47,28 +47,26 @@ def main(args):
     theta_2_range = int(360 / precision) + 1
 
     # Build configuration space
-    # FIXME: Slow as fuck, it needs to be run on multiple processors
-    c_space = np.zeros((theta_1_range, theta_2_range))
+    # Initially everything is free space
+    c_space = np.full((theta_1_range, theta_2_range), 255, dtype = int)
     for theta_2 in range(theta_2_range):
         for theta_1 in range(theta_1_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
             world_tcp = tf_base_to_world(base_tcp)
-
-            # Since we assume the TCP is a circle with radius 2
-            tcp = shapely.geometry.Point(world_tcp).buffer(2)
-
-            c_space[theta_2][theta_1] = 255
+            tcp = shapely.geometry.Point(world_tcp)
 
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
-                if c_obstacle.intersects(tcp):
+                if c_obstacle.contains(tcp):
                     c_space[theta_2][theta_1] = 0
-                    #print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
     c_space = np.flip(c_space, 0)
     c_space = np.flip(c_space, 1)
+
+    # Add manipulator point at the center of the configuration space
+    c_space[int(theta_1_range / 2)][int(theta_2_range / 2)] = 100
 
     # Plot configuration space
     # TODO: Better plotting with right axes
