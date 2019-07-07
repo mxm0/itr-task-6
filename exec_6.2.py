@@ -49,7 +49,7 @@ def find_path(road_map, paths_start, paths_goal):
             try:
                 s_to_g = nk.shortest_path(road_map, path_start, path_goal)
                 return True, s_to_g
-            except nk.NetworkXNoPath:
+            except:
                 pass
                 #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
     return False, None 
@@ -121,19 +121,23 @@ def main(args):
                     road_map.add_edge(node_1, node_2)
 
             if G_1.contains(tcp):
+                if c_space[theta_1][theta_2] != 0:
+                    path_goal_g1.append((theta_1, theta_2))
                 c_space[theta_1][theta_2] = 10
-                path_goal_g1.append((theta_1, theta_2))
             elif G_2.contains(tcp):
+                if c_space[theta_1][theta_2] != 0:
+                    path_goal_g2.append((theta_1, theta_2))
                 c_space[theta_1][theta_2] = 200
-                path_goal_g2.append((theta_1, theta_2))
             elif S.contains(tcp):
+                if c_space[theta_1][theta_2] != 0:
+                    path_start.append((theta_1, theta_2))
                 c_space[theta_1][theta_2] = 150
-                path_start.append((theta_1, theta_2))
 
     print("Configuration space built!")
 
     path_goals = {_G_1 : path_goal_g1, _G_2 : path_goal_g2}
-    '''
+
+    print("Searching for a path...")
     for path_goal in path_goals.items():
         pathIsFound, found_path = find_path(road_map, path_start, path_goal[1])
         if pathIsFound:
@@ -146,7 +150,7 @@ def main(args):
                     c_space[node[0]][node[1]] = 50
         else:
             print("Path goal {} is unreachable from path start {}".format(path_goal[0], _S))
-    '''
+ 
     # Plot configuration space
     bounds = [0, 9, 19, 51, 101, 151, 254, 255]
     colormap = clr.ListedColormap(['gray', 'green', 'purple', 'orange', 'red', 'yellow', 'white'])
@@ -171,7 +175,7 @@ if __name__ == "__main__":
 		  "precision",
                   type=float,
                   nargs="?",
-                  default=0.1,
+                  default=1,
 		  help = "pass precision for configuration space",
 		  metavar = "P")
     args = parser.parse_args() 
