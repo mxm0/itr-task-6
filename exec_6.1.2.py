@@ -83,28 +83,28 @@ def main(args):
     theta_1_range = int(360 / precision) + 1 # include upper bound
     theta_2_range = int(360 / precision) + 1
 
+    worldsize = mp.cpu_count()
+
     # Build configuration space
     # FIXME: Slow as fuck, it needs to be run on multiple processors
     c_space = np.zeros((theta_1_range, theta_2_range))
-    print(c_space)
+
     queue = mp.Queue()
-    p0 = mp.Process(target=calc_cspace, args=(theta_1_range, theta_2_range, precision, c_obstacles, queue, 0, 4))
-    p1 = mp.Process(target=calc_cspace, args=(theta_1_range, theta_2_range, precision, c_obstacles, queue, 1, 4))
-    p2 = mp.Process(target=calc_cspace, args=(theta_1_range, theta_2_range, precision, c_obstacles, queue, 2, 4))
-    p3 = mp.Process(target=calc_cspace, args=(theta_1_range, theta_2_range, precision, c_obstacles, queue, 3, 4))
-    p0.start()
-    p1.start()
-    p2.start()
-    p3.start()
-    np.add(c_space, queue.get(), c_space)
-    np.add(c_space, queue.get(), c_space)
-    np.add(c_space, queue.get(), c_space)
-    np.add(c_space, queue.get(), c_space)
-    p0.join()
-    p1.join()
-    p2.join()
-    p3.join()
-    print(c_space.shape)
+    processes = []
+
+    # start a process for every cpu
+    for processid in range(worldsize):
+        p = mp.Process(target=calc_cspace, args=(theta_1_range, theta_2_range, precision, c_obstacles, queue, processid, worldsize))
+        p.start()
+        processes.append(p)
+
+    # need this in a separate loop. combining with the join loop will deadlock
+    for i in range(worldsize):
+        np.add(c_space, queue.get(), c_space)
+
+    # join all processes
+    for p in processes:
+        p.join()
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
