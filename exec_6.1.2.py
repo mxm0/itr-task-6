@@ -49,7 +49,7 @@ def find_path(road_map, paths_start, paths_goal):
             try:
                 s_to_g = nk.shortest_path(road_map, path_start, path_goal)
                 return True, s_to_g
-            except nk.NetworkXNoPath:
+            except:
                 pass
                 #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
     return False, None 
