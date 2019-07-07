@@ -49,6 +49,7 @@ def main(args):
     # Build configuration space
     # Initially everything is free space
     c_space = np.full((theta_1_range, theta_2_range), 255, dtype = int)
+    print("Computing configuration space...")
     for theta_2 in range(theta_2_range):
         for theta_1 in range(theta_1_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
@@ -59,6 +60,8 @@ def main(args):
             for c_obstacle in c_obstacles:
                 if c_obstacle.contains(tcp):
                     c_space[theta_2][theta_1] = 0
+
+    print("Configuration space built!")
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
