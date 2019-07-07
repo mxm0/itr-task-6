@@ -50,8 +50,8 @@ def main(args):
     # Initially everything is free space
     c_space = np.full((theta_1_range, theta_2_range), 255, dtype = int)
     print("Computing configuration space...")
-    for theta_2 in range(theta_2_range):
-        for theta_1 in range(theta_1_range):
+    for theta_1 in range(theta_1_range):
+        for theta_2 in range(theta_2_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
             world_tcp = tf_base_to_world(base_tcp)
             tcp = shapely.geometry.Point(world_tcp)
@@ -59,30 +59,21 @@ def main(args):
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if c_obstacle.contains(tcp):
-                    c_space[theta_2][theta_1] = 0
+                    c_space[theta_1][theta_2] = 0
 
     print("Configuration space built!")
-
-    # Need to flip the array because numpy access them row first
-    # are accessed row first.
-    c_space = np.flip(c_space, 0)
-    c_space = np.flip(c_space, 1)
 
     # Add manipulator point at the center of the configuration space
     c_space[int(theta_1_range / 2)][int(theta_2_range / 2)] = 100
 
     # Plot configuration space
-    # TODO: Better plotting with right axes
     bounds = [0, 9, 19, 254, 255]
     colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
+    plt.xlabel("Theta 2")
+    plt.ylabel("Theta 1")
     plt.imshow(c_space, cmap=colormap, norm=norm)
     plt.show()
-
-    # TODO: Plot work and configuration space with
-    #       start areas.
-
-    # TODO: Find path and plot it in the configuration space
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
