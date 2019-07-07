@@ -249,7 +249,7 @@ def main(args):
 
     # workspace_image = np.flipud(workspace)
     workspace_image = workspace.T
-    fig2 = plt.figure()
+    fig2 = plt.figure(figsize=(17,17))
 
     plt.imshow(workspace_image, cmap=colormap, norm=norm)
     plt.xlabel("X")
@@ -261,7 +261,7 @@ def main(args):
     yellow_patch = mpatches.Patch(color='purple', label='Goal 2')
     grey_patch = mpatches.Patch(color='grey', label='Obstacle')
     purple_patch = mpatches.Patch(color='blue', label='Manipulator Base')
-    plt.legend(handles=[red_patch, green_patch, yellow_patch, grey_patch, purple_patch])
+    plt.legend(handles=[red_patch, green_patch, yellow_patch, grey_patch, purple_patch], loc='upper left', fontsize='xx-large')
 
     plt.title("Workspace")
     plt.show()

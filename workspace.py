@@ -71,7 +71,7 @@ workspace_image = workspace.T
 bounds = [0, 9, 19, 51, 101, 151, 254, 255]
 colormap = clr.ListedColormap(['gray', 'green', 'blue', 'orange', 'red', 'purple', 'white'])
 norm = clr.BoundaryNorm(bounds, colormap.N)
-fig2 = plt.figure()
+fig2 = plt.figure(figsize=(17, 17))
 
 
 plt.xlabel("X")
@@ -83,7 +83,7 @@ green_patch = mpatches.Patch(color='green', label='Goal 1')
 yellow_patch = mpatches.Patch(color='purple', label='Goal 2')
 grey_patch = mpatches.Patch(color='grey', label='Obstacle')
 purple_patch = mpatches.Patch(color='blue', label='Manipulator Base')
-plt.legend(handles=[red_patch, green_patch, yellow_patch, grey_patch, purple_patch])
+plt.legend(handles=[red_patch, green_patch, yellow_patch, grey_patch, purple_patch], loc='upper left', fontsize='xx-large')
 
 plt.title("Workspace")
 
