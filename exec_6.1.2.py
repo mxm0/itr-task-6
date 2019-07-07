@@ -6,6 +6,7 @@ import math
 import shapely.geometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import networkx as nk
 
 BASE_POS = np.array([500, 500])
 L_1, L_2 = 200, 200
@@ -59,6 +60,11 @@ def main(args):
     # Build configuration space
     # FIXME: Slow as fuck, it needs to be run on multiple processors
     c_space = np.zeros((theta_1_range, theta_2_range))
+    road_map = nk.DiGraph()
+    path_start = (())
+    path_goal_g1 = (())
+    path_goal_g2 = (())
+    print("Computing configuration space...")
     for theta_2 in range(theta_2_range):
         for theta_1 in range(theta_1_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
@@ -69,18 +75,63 @@ def main(args):
 
             c_space[theta_2][theta_1] = 255
 
-            if G_1.intersects(tcp) or G_2.intersects(tcp):
+            if G_1.intersects(tcp):
                 c_space[theta_2][theta_1] = 10
+                path_goal_g1 = (theta_2, theta_1)
                 # print("Found G")
+            elif G_2.intersects(tcp):
+                c_space[theta_2][theta_1] = 10
+                path_goal_g2 = (theta_2, theta_1)
             elif S.intersects(tcp):
                 c_space[theta_2][theta_1] = 20
                 # print("Found S")
+
+            # Store path start configuration
+            if np.array_equal(world_tcp, _S):
+                path_start = (theta_2, theta_1)
 
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
                 if c_obstacle.intersects(tcp):
                     c_space[theta_2][theta_1] = 0
+                    road_map.remove_node((theta_2, theta_1))
+                else:
+                    node_1 = (theta_2, theta_1)
+
+                    node_2 = (theta_2, (theta_1 + 1) % theta_1_range)
+                    road_map.add_edge(node_1, node_2)
+
+                    node_2 = ((theta_2 + 1) % theta_2_range, (theta_1 + 1) % theta_1_range)
+                    road_map.add_edge(node_1, node_2)
+
+                    node_2 = ((theta_2 + 1) % theta_2_range, theta_1)
+                    road_map.add_edge(node_1, node_2)
                     # print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
+
+    print("Configuration space built!")
+
+    # Find shortest path from Start to goal positions in c-space
+    print("Searching for path from: {} to {}".format(path_start, path_goal_g1))
+    try:
+        s_to_g1 = nk.shortest_path(road_map, path_start, path_goal_g1)
+        # Draw path
+        for node in s_to_g1:
+            c_space[node[0]][node[1]] = 50
+    except nk.NetworkXNoPath:
+        print("Path goal: {} is unreachable from path start: {}".format(path_start, path_goal_g1))
+
+
+    print("Searching for path from: {} to {}".format(path_start, path_goal_g2))
+    try:
+        s_to_g2 = nk.shortest_path(road_map, path_start, path_goal_g2)
+        # Draw path
+        for node in s_to_g2:
+            c_space[node[0]][node[1]] = 100
+    except nk.NetworkXNoPath:
+        print("Path goal: {} is unreachable from path start: {}".format(path_start, path_goal_g2))
+
+
+
 
     # Need to flip the array because numpy access them row first
     # are accessed row first.
@@ -89,8 +140,8 @@ def main(args):
 
     # Plot configuration space
     # TODO: Better plotting with right axes
-    bounds = [0, 9, 19, 254, 255]
-    colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
+    bounds = [0, 9, 19, 51, 101, 254, 255]
+    colormap = clr.ListedColormap(['gray', 'green', 'yellow', 'orange', 'red', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
     plt.imshow(c_space, cmap=colormap, norm=norm)
     plt.show()
@@ -105,7 +156,7 @@ if __name__ == "__main__":
         description = "Compute and plot configuration space for 2D manipulator for exec 6.1.")
     parser.add_argument(
 		  "precision",
-                  type=int,
+                  type=float,
                   nargs="?",
                   default=1,
 		  help = "pass precision for configuration space",
