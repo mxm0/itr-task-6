@@ -34,7 +34,6 @@ def tf_base_to_world(position):
     """ Transform base link coordinates to world coordinates. """
     return position + BASE_POS
 
-
 def main(args):
     precision = args.precision
     # Build C-Obstacles by adding radius of TCP to the
@@ -67,7 +66,6 @@ def main(args):
     c_space[int(theta_1_range / 2)][int(theta_2_range / 2)] = 100
 
     # Plot configuration space
-
     bounds = [0, 9, 19, 254, 255]
     colormap = clr.ListedColormap(['gray', 'green', 'red', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
