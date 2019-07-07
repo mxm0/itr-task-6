@@ -59,7 +59,7 @@ def main(args):
 
     # Build configuration space
     # FIXME: Slow as fuck, it needs to be run on multiple processors
-    c_space = np.zeros((theta_1_range, theta_2_range))
+    c_space = np.full((theta_1_range, theta_2_range), 255)
     road_map = nk.DiGraph()
     path_start = (())
     path_goal_g1 = (())
@@ -69,11 +69,7 @@ def main(args):
         for theta_1 in range(theta_1_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
             world_tcp = tf_base_to_world(base_tcp)
-
-            # Since we assume the TCP is a circle with radius 2
-            tcp = shapely.geometry.Point(world_tcp).buffer(2)
-
-            c_space[theta_2][theta_1] = 255
+            tcp = shapely.geometry.Point(world_tcp)
 
             if G_1.intersects(tcp):
                 c_space[theta_2][theta_1] = 10
@@ -92,7 +88,7 @@ def main(args):
 
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
-                if c_obstacle.intersects(tcp):
+                if c_obstacle.contains(tcp):
                     c_space[theta_2][theta_1] = 0
                     road_map.remove_node((theta_2, theta_1))
                 else:
