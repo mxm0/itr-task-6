@@ -6,6 +6,7 @@ import math
 import shapely.geometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import networkx as nk
 
 BASE_POS = np.array([500, 500])
 L_1, L_2 = 200, 200
@@ -38,6 +39,20 @@ def tf_base_to_world(position):
     """ Transform base link coordinates to world coordinates. """
     return position + BASE_POS
 
+def find_path(road_map, paths_start, paths_goal):
+    """ Search for a path from the start area to the goal area
+        Since we have area we take lists of possible configurations.
+    """
+    # Find shortest path from Start to goal positions in c-space
+    for path_start in paths_start:
+        for path_goal in paths_goal:
+            try:
+                s_to_g = nk.shortest_path(road_map, path_start, path_goal)
+                return True, s_to_g
+            except nk.NetworkXNoPath:
+                pass
+                #print("Path from: {} to {} not found. Trying next path.".format(path_start, path_goal))
+    return False, None 
 
 def main(args):
     precision = args.precision
@@ -63,12 +78,17 @@ def main(args):
     theta_2_range = int(360 / precision) + 1
 
     # Build configuration space
-    # FIXME: Slow as fuck, it needs to be run on multiple processors
-    c_space = np.zeros((theta_1_range, theta_2_range))
-    for theta_2 in range(theta_2_range):
-        for theta_1 in range(theta_1_range):
+    c_space = np.full((theta_1_range, theta_2_range), 255)
+    road_map = nk.DiGraph()
+    path_start = []
+    path_goal_g1 = []
+    path_goal_g2 = []
+    print("Computing configuration space...")
+    for theta_1 in range(theta_1_range):
+        for theta_2 in range(theta_2_range):
             base_tcp = compute_fk(theta_1 * precision, theta_2 * precision, L_1, L_2)
             world_tcp = tf_base_to_world(base_tcp)
+            tcp = shapely.geometry.Point(world_tcp)
 
             manipulator_joint = compute_fk(theta_1 * precision, 0, L_1, 0)
             world_joint = tf_base_to_world(manipulator_joint)
@@ -79,43 +99,70 @@ def main(args):
             link2_line.coords = (world_joint, world_tcp)
             link2 = link2_line.buffer(5)
 
-            # Since we assume the TCP is a circle with radius 2
-            tcp = shapely.geometry.Point(world_tcp).buffer(2)
-
-            c_space[theta_2][theta_1] = 255
-
             # Check if TCP is in collision
             for c_obstacle in c_obstacles:
-                if link1.intersects(c_obstacle) or link2.intersects(c_obstacle):
-                    c_space[theta_2][theta_1] = 30
-                if c_obstacle.intersects(tcp):
-                    c_space[theta_2][theta_1] = 0
-                    # print("Configuration collision: {}".format((theta_1 * precision, theta_2 * precision)))
+                if c_obstacle.contains(tcp) or \
+                   link1.intersects(c_obstacle) or link2.intersects(c_obstacle):
+                    c_space[theta_1][theta_2] = 0
+                    try:
+                        road_map.remove_node((theta_1, theta_2))
+                    except:
+                        pass
+                else:
+                    node_1 = (theta_1, theta_2)
 
-            if G_1.intersects(tcp) or G_2.intersects(tcp):
-                c_space[theta_2][theta_1] = 10
-                # print("Found G")
-            elif S.intersects(tcp):
-                c_space[theta_2][theta_1] = 20
-                # print("Found S")
+                    node_2 = (theta_1, (theta_2 + 1) % theta_2_range)
+                    road_map.add_edge(node_1, node_2)
 
-    # Need to flip the array because numpy access them row first
-    # are accessed row first.
-    c_space = np.flip(c_space, 0)
-    c_space = np.flip(c_space, 1)
+                    node_2 = ((theta_1 + 1) % theta_1_range, (theta_2 + 1) % theta_2_range)
+                    road_map.add_edge(node_1, node_2)
 
+                    node_2 = ((theta_1 + 1) % theta_1_range, theta_2)
+                    road_map.add_edge(node_1, node_2)
+
+            if G_1.contains(tcp):
+                c_space[theta_1][theta_2] = 10
+                path_goal_g1.append((theta_1, theta_2))
+            elif G_2.contains(tcp):
+                c_space[theta_1][theta_2] = 200
+                path_goal_g2.append((theta_1, theta_2))
+            elif S.contains(tcp):
+                c_space[theta_1][theta_2] = 150
+                path_start.append((theta_1, theta_2))
+
+    print("Configuration space built!")
+
+    path_goals = {_G_1 : path_goal_g1, _G_2 : path_goal_g2}
+    '''
+    for path_goal in path_goals.items():
+        pathIsFound, found_path = find_path(road_map, path_start, path_goal[1])
+        if pathIsFound:
+            print("Path to {} found!".format(path_goal[0]))
+            # Draw path
+            for node in found_path:
+                if path_goal[0] == _G_1:
+                    c_space[node[0]][node[1]] = 100
+                else:
+                    c_space[node[0]][node[1]] = 50
+        else:
+            print("Path goal {} is unreachable from path start {}".format(path_goal[0], _S))
+    '''
     # Plot configuration space
-    # TODO: Better plotting with right axes
-    bounds = [0, 9, 19, 29, 254, 255]
-    colormap = clr.ListedColormap(['0.7', 'green', 'red', '0.4', 'white'])
+    bounds = [0, 9, 19, 51, 101, 151, 254, 255]
+    colormap = clr.ListedColormap(['gray', 'green', 'purple', 'orange', 'red', 'yellow', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
-    plt.imshow(c_space, cmap=colormap, norm=norm)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0
+    plt.imshow(c_space_image, cmap=colormap, norm=norm)
+    plt.xlabel("Theta 2")
+    plt.ylabel("Theta 1")
+    plt.xticks(np.arange(0, theta_2_range, theta_2_range//36)) # we want exactly 36 ticks for the x axis
+    plt.yticks(np.arange(0, theta_1_range, theta_1_range//36)) # we want exactly 36 ticks for the y axis
+    ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
+    ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
     plt.show()
-
-    # TODO: Plot work and configuration space with
-    #       start areas.
-
-    # TODO: Find path and plot it in the configuration space
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
