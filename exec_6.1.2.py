@@ -75,7 +75,9 @@ def draw_path(workspace, path, color_value):
     for angle in path:
         pos = compute_fk(angle[0], angle[1], 200, 200)
         pos = tf_base_to_world(pos)
-        workspace[math.floor(pos[0])][math.floor(pos[1])] = color_value
+        i = int(math.floor(pos[0]))
+        j = int(math.floor(pos[1]))
+        workspace[i, j] = color_value
 
     return workspace
 
