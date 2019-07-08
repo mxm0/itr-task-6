@@ -1,11 +1,11 @@
 #!/usr/bin/python3
-import sys, argparse
+import argparse
 import numpy as np
-import multiprocessing as mp
 import math
 import shapely.geometry
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+
 
 BASE_POS = np.array([500, 500])
 L_1, L_2 = 200, 200
@@ -15,7 +15,6 @@ R_1 = 50
 
 _O_2 = (250, 200)
 R_2 = 200
-
 
 def compute_fk(theta_1, theta_2, a_1, a_2):
     """ Compute forward kinematics for 2D planar manipulator. 
@@ -42,7 +41,7 @@ def main(args):
     O_2 = shapely.geometry.Point(_O_2).buffer(R_2 + 2)
     c_obstacles = [O_1, O_2]
 
-    theta_1_range = int(360 / precision) + 1 # include upper bound
+    theta_1_range = int(360 / precision) + 1  # include upper bound
     theta_2_range = int(360 / precision) + 1
 
     # Build configuration space
@@ -72,7 +71,7 @@ def main(args):
 
     fig = plt.figure(figsize=(14, 14))
     ax = fig.add_subplot(1, 1, 1)
-    c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0
+    c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0 (see set_yticklabels below...)
     plt.imshow(c_space_image, cmap=colormap, norm=norm)
     plt.xlabel("Theta 2")
     plt.ylabel("Theta 1")
@@ -85,12 +84,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description = "Compute and plot configuration space for 2D manipulator for exec 6.1.")
+        description = "Compute and plot configuration space for 2D manipulator for exec 6.1.1")
     parser.add_argument(
 		  "precision",
-                  type=int,
-                  nargs="?",
-                  default=1,
+          type=int,
+          nargs="?",
+          default=1,
 		  help = "pass precision for configuration space",
 		  metavar = "P")
     args = parser.parse_args() 

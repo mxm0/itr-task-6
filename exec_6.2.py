@@ -1,7 +1,6 @@
 #!/usr/bin/python3
-import sys, argparse
+import argparse
 import numpy as np
-import multiprocessing as mp
 import math
 import shapely.geometry
 import matplotlib.pyplot as plt
@@ -41,9 +40,9 @@ def tf_base_to_world(position):
 
 def find_path(road_map, paths_start, paths_goal):
     """ Search for a path from the start area to the goal area
-        Since we have area we take lists of possible configurations.
+        Since we have an area, we take lists of possible configurations.
     """
-    # Find shortest path from Start to goal positions in c-space
+    # Find shortest path from Start to Goal positions in c-space
     for path_start in paths_start:
         for path_goal in paths_goal:
             try:
@@ -63,7 +62,7 @@ def main(args):
     c_obstacles = [O_1, O_2]
 
     # Build the start point and two goal points
-    # substract radius of TCP so that TCP is fully in area
+    # Subtract radius of TCP so that TCP is fully in start/goal area
     G_1 = shapely.geometry.Point(_G_1).buffer(R_SG - 2)
     G_2 = shapely.geometry.Point(_G_2).buffer(R_SG - 2)
     S = shapely.geometry.Point(_S).buffer(R_SG - 2)
@@ -74,7 +73,7 @@ def main(args):
     link1 = link1_line.buffer(5)
     link2 = link2_line.buffer(5)
 
-    theta_1_range = int(360 / precision) + 1 # include upper bound
+    theta_1_range = int(360 / precision) + 1  # include upper bound
     theta_2_range = int(360 / precision) + 1
 
     # Build configuration space
@@ -105,13 +104,13 @@ def main(args):
                    link1.intersects(c_obstacle) or link2.intersects(c_obstacle):
                     c_space[theta_1][theta_2] = 0
                     try:
-                        road_map.remove_node((theta_1, theta_2))
+                        road_map.remove_node((theta_1, theta_2))  # there can be situations in which we add non-free nodes (see else branch of this if statement below)
                     except:
                         pass
                 else:
                     node_1 = (theta_1, theta_2)
-
-                    node_2 = (theta_1, (theta_2 + 1) % theta_2_range)
+                    # To handle wrap-arounds at the borders of the configuration space:
+                    node_2 = (theta_1, (theta_2 + 1) % theta_2_range)  # if this is not free, the remove_node from above will remove it later
                     road_map.add_edge(node_1, node_2)
 
                     node_2 = ((theta_1 + 1) % theta_1_range, (theta_2 + 1) % theta_2_range)
@@ -158,7 +157,7 @@ def main(args):
 
     fig = plt.figure(figsize=(14, 14))
     ax = fig.add_subplot(1, 1, 1)
-    c_space_image = np.flipud(c_space) # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0
+    c_space_image = np.flipud(c_space)  # we flip because we want the y axis to go from 0 to 360 instead of 360 to 0 (see set_yticklabels below...)
     plt.imshow(c_space_image, cmap=colormap, norm=norm)
     plt.xlabel("Theta 2")
     plt.ylabel("Theta 1")
@@ -171,12 +170,12 @@ def main(args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description = "Compute and plot configuration space for 2D manipulator for exec 6.1.")
+        description = "Compute and plot configuration space for 2D manipulator for exec 6.2")
     parser.add_argument(
 		  "precision",
-                  type=float,
-                  nargs="?",
-                  default=1,
+          type=float,
+          nargs="?",
+          default=1,
 		  help = "pass precision for configuration space",
 		  metavar = "P")
     args = parser.parse_args() 
