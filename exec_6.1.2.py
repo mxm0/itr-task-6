@@ -176,7 +176,8 @@ def main(args):
     ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
     ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
     plt.title("Task 6.1.2 Configuration Space")
-    plt.show()
+    #plt.show()
+    plt.savefig("fig612-cspace.png")
 
 
 
@@ -211,7 +212,8 @@ def main(args):
     plt.legend(handles=[red_patch, green_patch, yellow_patch, grey_patch, purple_patch], loc='upper left', fontsize='xx-large')
 
     plt.title("Task 6.1.2 Workspace")
-    plt.show()
+    #plt.show()
+    plt.savefig("fig612-wspace.png")
 
     # End drawing workspace
 

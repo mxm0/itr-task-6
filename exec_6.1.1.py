@@ -80,7 +80,8 @@ def main(args):
     ax.set_xticklabels(np.arange(0, 360, 10), rotation=-90) # normalize the labels for x so that we see angles instead of array indexes
     ax.set_yticklabels(np.arange(360, 0, -10)) # normalize the labels for y so that we see angles instead of array indexes
     plt.title("Task 6.1.1 Configuration Space")
-    plt.show()
+    #plt.show()
+    plt.savefig("fig611.png")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
