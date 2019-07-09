@@ -88,7 +88,7 @@ if __name__ == "__main__":
         description = "Compute and plot configuration space for 2D manipulator for exec 6.1.1")
     parser.add_argument(
 		  "precision",
-          type=int,
+          type=float,
           nargs="?",
           default=1,
 		  help = "pass precision for configuration space",
