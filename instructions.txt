@@ -1,0 +1,19 @@
+1) Install virtualenv: sudo pip install virtualenv
+
+2) Make a folder where to install dependencies: mkdir virtplay 
+
+3) cd to virtplay
+
+4) Instantiate the virtual environment: virtualenv -p /usr/bin/python2.7 venv
+
+5) Activate the virtual environment: source venv/bin/activate
+
+6) Install all requirements listed in requirements.txt (network connection needed): pip install -r requirements.txt
+
+7) Place the folder of assignment 6 scripts in virtplay
+
+8) cd to the folder with executable assignment 6 scripts
+
+9) If for some reason they are not executable: chmod +x script_name.py
+
+10) Run: python script_name.py
