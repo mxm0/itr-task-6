@@ -119,6 +119,9 @@ def main(args):
                     node_2 = ((theta_1 + 1) % theta_1_range, theta_2)
                     road_map.add_edge(node_1, node_2)
 
+            # Draw goal and start position on configuration space.
+            # Save configurations for start/goal path if they are
+            # not collision
             if G_1.contains(tcp):
                 if c_space[theta_1][theta_2] != 0:
                     path_goal_g1.append((theta_1, theta_2))
