@@ -147,15 +147,15 @@ def main(args):
             # Draw path
             for node in found_path:
                 if path_goal[0] == _G_1:
-                    c_space[node[0]][node[1]] = 100
+                    c_space[node[0]][node[1]] = 10
                 else:
-                    c_space[node[0]][node[1]] = 50
+                    c_space[node[0]][node[1]] = 200
         else:
             print("Path goal {} is unreachable from path start {}".format(path_goal[0], _S))
  
     # Plot configuration space
     bounds = [0, 9, 19, 51, 101, 151, 254, 255]
-    colormap = clr.ListedColormap(['gray', 'green', 'purple', 'orange', 'red', 'yellow', 'white'])
+    colormap = clr.ListedColormap(['gray', 'green', 'blue', 'orange', 'red', 'purple', 'white'])
     norm = clr.BoundaryNorm(bounds, colormap.N)
 
     fig = plt.figure(figsize=(14, 14))
