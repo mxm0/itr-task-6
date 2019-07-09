@@ -130,15 +130,17 @@ def main(args):
                     road_map.add_edge(node_1, node_2)
 
             if G_1.contains(tcp):
+                if c_space[theta_1][theta_2] != 0:
+                    path_goal_g1.append((theta_1, theta_2))
                 c_space[theta_1][theta_2] = 10
-                path_goal_g1.append((theta_1, theta_2))
             elif G_2.contains(tcp):
+                if c_space[theta_1][theta_2] != 0:
+                    path_goal_g2.append((theta_1, theta_2))
                 c_space[theta_1][theta_2] = 200
-                path_goal_g2.append((theta_1, theta_2))
             elif S.contains(tcp):
-                c_space[theta_1][theta_2] = 150 
-                path_start.append((theta_1, theta_2))
-
+                if c_space[theta_1][theta_2] != 0:
+                    path_start.append((theta_1, theta_2))
+                c_space[theta_1][theta_2] = 150
 
     print("Configuration space built!")
 
